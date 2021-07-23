@@ -48,9 +48,13 @@ const Box = styled.div`
     padding: 14px 16px;
     margin-bottom: 14px;
     border-radius: 10000px;
-    ::placeholder {
+    outline-style: none;
+    :placeholder {
       color: #333333;
       opacity: 1;
+    }
+    :hover{
+      box-shadow: 0px 2px 10px #ccc7c7;
     }
   }
 
@@ -60,6 +64,12 @@ const Box = styled.div`
     color: #FFFFFF;
     border-radius: 10000px;
     background-color: #6F92BB;
+    transition: 300ms;
+    :hover{
+      cursor: pointer;
+      opacity: .8;
+      transition: 300ms;
+    };
   }
 `;
 
