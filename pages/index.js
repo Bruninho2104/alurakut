@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import styled from 'styled-components'
 import Box from '../src/components/Box'
 import MainGrid from '../src/components/MainGrid'
@@ -22,6 +22,26 @@ function ProfileSideabar(props) {
   );
 }
 
+function ProfileRelationsBox(props){
+  return(
+    <ProfileRelationsBoxWrapper>
+        <h2 className="smallTitle">Seguidores ({props.items.length})</h2>
+        {/* <ul>
+          {seguidores.map((seguidor)=>{
+            return(
+              <li key={seguidor.id}>
+                <a href={`/users/${seguidor.title}`} >
+                  <img src={seguidor.image} />
+                  <span>{seguidor.title}</span>
+                </a>
+              </li>
+            );
+          })}
+        </ul> */}
+      </ProfileRelationsBoxWrapper>
+  )
+}
+
 export default function Home() {
   const githubUser = 'Bruninho2104';
   const [comunidades, setComunidades] = useState([{
@@ -38,6 +58,17 @@ export default function Home() {
   'rafafaaa', 
   'felipefialho'
 ];
+const [seguidores, setSeguidores] = useState([]);
+
+useEffect(()=>{
+  fetch('https:api.github.com/users/peas/followers')
+  .then((respostaDoServidor)=>{
+    return respostaDoServidor.json();
+  })
+  .then((respostaCompleta)=>{
+    setSeguidores(respostaCompleta);
+  })
+}, [])
 
   return (
     <>
@@ -58,7 +89,7 @@ export default function Home() {
               event.preventDefault();
               const dadosDoForm = new FormData(event.target);
               const comunidade = {
-                id: new Date().toISOString,
+                id: new Date().toISOString(),
                 title: dadosDoForm.get('title'),
                 image: dadosDoForm.get('image'),
               }
@@ -90,6 +121,8 @@ export default function Home() {
           </Box>
         </div>
         <div className="profileRelationsArea" style={{gridArea: 'profileRelationsArea'}}>
+
+          <ProfileRelationsBox title="Seguidores" items={seguidores} />
           <ProfileRelationsBoxWrapper>
             <h2 className="smallTitle">Comunidades ({comunidades.length})</h2>
             <ul>
