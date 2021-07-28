@@ -1,5 +1,4 @@
 import React, {useState, useEffect} from 'react';
-import styled from 'styled-components'
 import Box from '../src/components/Box'
 import MainGrid from '../src/components/MainGrid'
 import {AlurakutMenu, AlurakutProfileSidebarMenuDefault, OrkutNostalgicIconSet} from "../src/lib/AlurakutCommons"
@@ -30,7 +29,7 @@ function ProfileRelationsBox(props){
           {seguidores.map((seguidor)=>{
             return(
               <li key={seguidor.id}>
-                <a href={`/users/${seguidor.title}`} >
+                <a href={`/followers/${seguidor.title}`} >
                   <img src={seguidor.image} />
                   <span>{seguidor.title}</span>
                 </a>
@@ -44,11 +43,7 @@ function ProfileRelationsBox(props){
 
 export default function Home() {
   const githubUser = 'Bruninho2104';
-  const [comunidades, setComunidades] = useState([{
-    id: "2144253452324",
-    title: "Eu odeio acordar cedo",
-    image: "https://alurakut.vercel.app/capa-comunidade-01.jpg"
-  }]);
+  const [comunidades, setComunidades] = useState([]);
   
   const pessoasFavoritas = [
   'juunegreiros', 
@@ -61,12 +56,36 @@ export default function Home() {
 const [seguidores, setSeguidores] = useState([]);
 
 useEffect(()=>{
+  //pegar a API de dados do github
   fetch('https:api.github.com/users/peas/followers')
   .then((respostaDoServidor)=>{
     return respostaDoServidor.json();
   })
   .then((respostaCompleta)=>{
     setSeguidores(respostaCompleta);
+  })
+  // API GraphQL
+  fetch('https://graphql.datocms.com/', {
+    method: 'POST',
+    headers: {
+      'Authorization': '5ee78244ffdea58479cf7bb7ca6a37',
+      'Content-type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify({'query': `query {
+      allCommunities {
+        title
+        id
+        imageUrl
+        creatorSlug
+      }
+    }`
+  })
+  })
+  .then((response) => response.json())
+  .then((respostaCompleta) => {
+    const comunidadesVindasDoDato = respostaCompleta.data.allCommunities;
+    setComunidades(comunidadesVindasDoDato)
   })
 }, [])
 
@@ -88,13 +107,26 @@ useEffect(()=>{
             <form onSubmit={(event) =>{
               event.preventDefault();
               const dadosDoForm = new FormData(event.target);
+
               const comunidade = {
-                id: new Date().toISOString(),
                 title: dadosDoForm.get('title'),
-                image: dadosDoForm.get('image'),
+                imageUrl: dadosDoForm.get('image'),
+                creatorSlug: githubUser,
               }
-              const comunidadesAtualizadas = [...comunidades, comunidade]
-              setComunidades(comunidadesAtualizadas)
+
+              fetch('api/communities', {
+                method: "POST",
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(comunidade)
+              })
+              .then(async (response) => {
+                const dados = await response.json();
+                const comunidade = dados.registroCriado;
+                const comunidadesAtualizadas = [...comunidades, comunidade];
+                setComunidades(comunidadesAtualizadas);
+              });
             
             }}>
               <div>
@@ -123,14 +155,15 @@ useEffect(()=>{
         <div className="profileRelationsArea" style={{gridArea: 'profileRelationsArea'}}>
 
           <ProfileRelationsBox title="Seguidores" items={seguidores} />
+
           <ProfileRelationsBoxWrapper>
             <h2 className="smallTitle">Comunidades ({comunidades.length})</h2>
             <ul>
               {comunidades.map((comunidade)=>{
                 return(
                   <li key={comunidade.id}>
-                    <a href={`/users/${comunidade.title}`} >
-                      <img src={comunidade.image} />
+                    <a href={`/communities/${comunidade.id}`} >
+                      <img src={comunidade.imageUrl} />
                       <span>{comunidade.title}</span>
                     </a>
                   </li>
